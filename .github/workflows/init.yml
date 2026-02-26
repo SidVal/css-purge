@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          # Importante: NO usar cache aquí porque todavía no existe package-lock.json
 
       - name: Crear estructura base
         shell: bash
@@ -37,13 +37,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          # postcss.config.js con PurgeCSS seguro para HTML estático
           cat > postcss.config.js <<'EOF'
           const purgecss = require('@fullhuman/postcss-purgecss');
 
-          // Safelist.
-          // Agrega aquí clases críticas que no aparecen literal en el HTML estático.
-          // Ejemplos: clases inyectadas por JS, estados, integraciones legacy.
+          // Safelist: agrega clases críticas aquí.
           const SAFE_LIST = [
             // 'is-active',
             // /^js-/,
@@ -51,24 +48,16 @@ jobs:
 
           module.exports = {
             plugins: [
-              // Plugins opcionales de PostCSS.
-              // Autoprefixer no es obligatorio para PurgeCSS, pero suele ser útil en CSS legacy.
               require('autoprefixer'),
-
-              // PurgeCSS.
-              // Content solo apunta a HTML estático en src/.
               purgecss({
                 content: ['./src/**/*.html'],
                 safelist: SAFE_LIST,
-                // Extractor conservador para HTML estático.
-                // Captura clases con letras, números, guiones, guiones bajos, dos puntos y slash (por ejemplo: col:6, md:w-1/2).
                 defaultExtractor: (content) => content.match(/[\w-/:]+(?<!:)/g) || [],
               }),
             ],
           };
           EOF
 
-          # package.json con scripts claros
           cat > package.json <<'EOF'
           {
             "name": "css-purge",
@@ -79,11 +68,16 @@ jobs:
               "dev": "npm run build && node -e \"console.log('Listo. Abre dist/index.html en tu navegador.');\"",
               "clean": "rm -rf dist && mkdir -p dist",
               "build": "npm run clean && cp -R src/*.html dist/ && if [ -d public ]; then cp -R public/. dist/; fi && postcss src/styles.css -o dist/styles.purged.css"
+            },
+            "devDependencies": {
+              "@fullhuman/postcss-purgecss": "^6.0.0",
+              "autoprefixer": "^10.4.20",
+              "postcss": "^8.4.47",
+              "postcss-cli": "^11.0.0"
             }
           }
           EOF
 
-          # .gitignore mínimo
           cat > .gitignore <<'EOF'
           node_modules
           npm-debug.log*
@@ -92,7 +86,6 @@ jobs:
           .DS_Store
           EOF
 
-          # HTML mínimo funcional
           cat > src/index.html <<'EOF'
           <!doctype html>
           <html lang="es">
@@ -122,7 +115,6 @@ jobs:
           </html>
           EOF
 
-          # CSS legacy simulado con clases usadas y no usadas
           cat > src/styles.css <<'EOF'
           /* Clases usadas por src/index.html */
           .page { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
@@ -148,20 +140,15 @@ jobs:
           .js-hook { outline: 2px dashed orange; }
 
           /* Simulación de miles de clases */
-          /* Puedes reemplazar este archivo por tu CSS real */
           EOF
 
-          # robots.txt para bloquear indexación total (se copia a dist vía public/)
           cat > public/robots.txt <<'EOF'
           User-agent: *
           Disallow: /
           EOF
 
-          # Placeholder para mantener public/ aunque esté vacío en el futuro
-          cat > public/.gitkeep <<'EOF'
-          EOF
+          : > public/.gitkeep
 
-          # README mínimo
           cat > README.md <<'EOF'
           # css-purge
 
@@ -180,12 +167,11 @@ jobs:
           Edita `postcss.config.js` para evitar que PurgeCSS elimine clases críticas.
           EOF
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias (genera package-lock.json)
         shell: bash
         run: |
           set -euo pipefail
           npm install --no-fund --no-audit
-          npm install -D postcss postcss-cli @fullhuman/postcss-purgecss autoprefixer
 
       - name: Build inicial
         shell: bash
