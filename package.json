@@ -1,0 +1,11 @@
+          {
+            "name": "css-purge",
+            "private": true,
+            "version": "0.1.0",
+            "type": "commonjs",
+            "scripts": {
+              "dev": "npm run build && node -e \"console.log('Listo. Abre dist/index.html en tu navegador.');\"",
+              "clean": "rm -rf dist && mkdir -p dist",
+              "build": "npm run clean && cp -R src/*.html dist/ && if [ -d public ]; then cp -R public/. dist/; fi && postcss src/styles.css -o dist/styles.purged.css"
+            }
+          }
