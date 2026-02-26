@@ -1,0 +1,214 @@
+name: Inicializar sandbox css-purge
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: init-css-purge
+  cancel-in-progress: false
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Crear estructura base
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p src public dist .github/workflows
+
+      - name: Generar archivos base (PostCSS, scripts, ejemplo mínimo)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # postcss.config.js con PurgeCSS seguro para HTML estático
+          cat > postcss.config.js <<'EOF'
+          const purgecss = require('@fullhuman/postcss-purgecss');
+
+          // Safelist.
+          // Agrega aquí clases críticas que no aparecen literal en el HTML estático.
+          // Ejemplos: clases inyectadas por JS, estados, integraciones legacy.
+          const SAFE_LIST = [
+            // 'is-active',
+            // /^js-/,
+          ];
+
+          module.exports = {
+            plugins: [
+              // Plugins opcionales de PostCSS.
+              // Autoprefixer no es obligatorio para PurgeCSS, pero suele ser útil en CSS legacy.
+              require('autoprefixer'),
+
+              // PurgeCSS.
+              // Content solo apunta a HTML estático en src/.
+              purgecss({
+                content: ['./src/**/*.html'],
+                safelist: SAFE_LIST,
+                // Extractor conservador para HTML estático.
+                // Captura clases con letras, números, guiones, guiones bajos, dos puntos y slash (por ejemplo: col:6, md:w-1/2).
+                defaultExtractor: (content) => content.match(/[\w-/:]+(?<!:)/g) || [],
+              }),
+            ],
+          };
+          EOF
+
+          # package.json con scripts claros
+          cat > package.json <<'EOF'
+          {
+            "name": "css-purge",
+            "private": true,
+            "version": "0.1.0",
+            "type": "commonjs",
+            "scripts": {
+              "dev": "npm run build && node -e \"console.log('Listo. Abre dist/index.html en tu navegador.');\"",
+              "clean": "rm -rf dist && mkdir -p dist",
+              "build": "npm run clean && cp -R src/*.html dist/ && if [ -d public ]; then cp -R public/. dist/; fi && postcss src/styles.css -o dist/styles.purged.css"
+            }
+          }
+          EOF
+
+          # .gitignore mínimo
+          cat > .gitignore <<'EOF'
+          node_modules
+          npm-debug.log*
+          yarn-debug.log*
+          yarn-error.log*
+          .DS_Store
+          EOF
+
+          # HTML mínimo funcional
+          cat > src/index.html <<'EOF'
+          <!doctype html>
+          <html lang="es">
+            <head>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <meta name="robots" content="noindex,nofollow" />
+              <title>css-purge sandbox</title>
+              <link rel="stylesheet" href="./styles.purged.css" />
+            </head>
+            <body class="page">
+              <main class="container">
+                <h1 class="title">css-purge sandbox</h1>
+                <p class="lead">
+                  Este HTML usa pocas clases. El CSS legacy simulado contiene muchas. PurgeCSS debe eliminar las no usadas.
+                </p>
+
+                <button class="btn btn-primary">Botón primario</button>
+                <button class="btn">Botón</button>
+
+                <section class="card">
+                  <h2 class="card__title">Tarjeta</h2>
+                  <p class="card__text">Si todo va bien, solo sobreviven las reglas usadas por este HTML.</p>
+                </section>
+              </main>
+            </body>
+          </html>
+          EOF
+
+          # CSS legacy simulado con clases usadas y no usadas
+          cat > src/styles.css <<'EOF'
+          /* Clases usadas por src/index.html */
+          .page { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+          .container { max-width: 820px; margin: 0 auto; }
+          .title { font-size: 32px; margin: 0 0 12px; }
+          .lead { font-size: 16px; line-height: 1.5; margin: 0 0 16px; }
+          .btn { border: 1px solid #333; padding: 10px 14px; background: white; cursor: pointer; border-radius: 8px; margin-right: 8px; }
+          .btn-primary { background: #111; color: #fff; }
+          .card { margin-top: 18px; padding: 14px; border: 1px solid #ddd; border-radius: 12px; }
+          .card__title { margin: 0 0 8px; font-size: 18px; }
+          .card__text { margin: 0; }
+
+          /* Clases legacy no usadas. Deben ser eliminadas */
+          .legacy-a { color: red; }
+          .legacy-b { color: blue; }
+          .legacy-c { color: green; }
+          .grid-1 { display: grid; grid-template-columns: 1fr; }
+          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; }
+          .u-hidden { display: none; }
+          .u-text-center { text-align: center; }
+          .u-text-right { text-align: right; }
+          .state-loading { opacity: 0.5; }
+          .js-hook { outline: 2px dashed orange; }
+
+          /* Simulación de miles de clases */
+          /* Puedes reemplazar este archivo por tu CSS real */
+          EOF
+
+          # robots.txt para bloquear indexación total (se copia a dist vía public/)
+          cat > public/robots.txt <<'EOF'
+          User-agent: *
+          Disallow: /
+          EOF
+
+          # Placeholder para mantener public/ aunque esté vacío en el futuro
+          cat > public/.gitkeep <<'EOF'
+          EOF
+
+          # README mínimo
+          cat > README.md <<'EOF'
+          # css-purge
+
+          Sandbox para optimizar CSS legacy con PostCSS + PurgeCSS.
+
+          - Fuente: `src/`
+          - Assets opcionales: `public/`
+          - Salida: `dist/`
+
+          ## Scripts
+          - `npm run build`: genera `dist/styles.purged.css`, copia HTML y assets.
+          - `npm run clean`: limpia `dist/`.
+          - `npm run dev`: build y mensaje de ayuda.
+
+          ## Safelist
+          Edita `postcss.config.js` para evitar que PurgeCSS elimine clases críticas.
+          EOF
+
+      - name: Instalar dependencias
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-fund --no-audit
+          npm install -D postcss postcss-cli @fullhuman/postcss-purgecss autoprefixer
+
+      - name: Build inicial
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run build
+          test -f dist/styles.purged.css
+          test -f dist/index.html
+          test -f dist/robots.txt
+
+      - name: Commit y push automático
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No hay cambios para commitear."
+            exit 0
+          fi
+
+          git commit -m "chore: inicializar sandbox css-purge"
+          git push
