@@ -1,3 +1,11 @@
-.mal {
-  pruebo y mal hago todo mal y borré cosas sin querer
-}
+.page { font-family: system-ui, sans-serif; padding: 24px; }
+.container { max-width: 720px; margin: 0 auto; }
+.title { font-size: 28px; margin-bottom: 12px; }
+.lead { margin-bottom: 16px; }
+.btn { padding: 10px 14px; border: 1px solid #222; background: white; border-radius: 8px; }
+.btn-primary { background: black; color: white; }
+
+/* Clases no usadas para testear purge */
+.legacy-x { color: red; }
+.legacy-y { color: blue; }
+.legacy-z { color: green; }
