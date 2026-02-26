@@ -1,24 +1,11 @@
-/* Clases usadas por src/index.html */
-.page { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
-.container { max-width: 820px; margin: 0 auto; }
-.title { font-size: 32px; margin: 0 0 12px; }
-.lead { font-size: 16px; line-height: 1.5; margin: 0 0 16px; }
-.btn { border: 1px solid #333; padding: 10px 14px; background: white; cursor: pointer; border-radius: 8px; margin-right: 8px; }
-.btn-primary { background: #111; color: #fff; }
-.card { margin-top: 18px; padding: 14px; border: 1px solid #ddd; border-radius: 12px; }
-.card__title { margin: 0 0 8px; font-size: 18px; }
-.card__text { margin: 0; }
+.page { font-family: system-ui, sans-serif; padding: 24px; }
+.container { max-width: 720px; margin: 0 auto; }
+.title { font-size: 28px; margin-bottom: 12px; }
+.lead { margin-bottom: 16px; }
+.btn { padding: 10px 14px; border: 1px solid #222; background: white; border-radius: 8px; }
+.btn-primary { background: black; color: white; }
 
-/* Clases legacy no usadas. Deben ser eliminadas */
-.legacy-a { color: red; }
-.legacy-b { color: blue; }
-.legacy-c { color: green; }
-.grid-1 { display: grid; grid-template-columns: 1fr; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; }
-.u-hidden { display: none; }
-.u-text-center { text-align: center; }
-.u-text-right { text-align: right; }
-.state-loading { opacity: 0.5; }
-.js-hook { outline: 2px dashed orange; }
-
-/* Simulación de miles de clases */
+/* Clases no usadas para testear purge */
+.legacy-x { color: red; }
+.legacy-y { color: blue; }
+.legacy-z { color: green; }
