@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>css-purge sandbox</title>
+    <link rel="stylesheet" href="./styles.purged.css" />
+  </head>
+  <body class="page">
+    <main class="container">
+      <h1 class="title">css-purge sandbox</h1>
+      <p class="lead">
+        Este HTML usa pocas clases. El CSS legacy simulado contiene muchas. PurgeCSS debe eliminar las no usadas.
+      </p>
+
+      <button class="btn btn-primary">Botón primario</button>
+      <button class="btn">Botón</button>
+
+      <section class="card">
+        <h2 class="card__title">Tarjeta</h2>
+        <p class="card__text">Si todo va bien, solo sobreviven las reglas usadas por este HTML.</p>
+      </section>
+    </main>
+  </body>
+</html>
